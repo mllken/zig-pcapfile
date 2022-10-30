@@ -1,5 +1,10 @@
 const std = @import("std");
 
+pub const pkg = std.build.Pkg{
+    .name = "zig-pcapfile",
+    .source = .{ .path = "pcapfile.zig" },
+};
+
 pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
 
