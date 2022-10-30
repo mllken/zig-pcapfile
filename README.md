@@ -4,8 +4,8 @@ A pure Zig library for reading and writing PCAP files
 _Tested against Zig version 0.10.x_
 
 ## Status
-Full support for reading and writing PCAP version 2.4 files (.pcap extension)
-No support for PCAPNG files (.pcapng extension)
+Full support for reading and writing PCAP version 2.4 files (.pcap extension)  
+No support for PCAPNG files (.pcapng extension)  
 
 ## Usage
 ```zig
