@@ -29,13 +29,13 @@ const record_header_len = 16;
 
 /// The global file header
 pub const FileHeader = extern struct {
-    magic: u32 = @enumToInt(Magic.MicroSeconds),
+    magic: u32 = @intFromEnum(Magic.MicroSeconds),
     major: u16 = major_version,
     minor: u16 = minor_version,
     reserved1: u32 = 0,
     reserved2: u32 = 0,
     snap_len: u32 = default_max_snap_len,
-    network: u32 = @enumToInt(LinkType.ETHERNET),
+    network: u32 = @intFromEnum(LinkType.ETHERNET),
 };
 
 /// The packet record header for each packet.
@@ -72,7 +72,7 @@ pub fn Iterator(comptime ReaderType: type) type {
         pub fn init(allocator: mem.Allocator, options: IteratorOptions, reader: anytype) !Self {
             const hdr_bytes = try reader.readBytesNoEof(file_header_len);
             const magic = mem.readIntLittle(u32, hdr_bytes[0..4]);
-            const endian: std.builtin.Endian = switch (@intToEnum(Magic, magic)) {
+            const endian: std.builtin.Endian = switch (@as(Magic, @enumFromInt(magic))) {
                 .MicroSeconds, .NanoSeconds => .Little,
                 .MicroSecondsBE, .NanoSecondsBE => .Big,
                 _ => return error.BadMagic,
@@ -164,9 +164,9 @@ pub fn PcapWriter(comptime WriterType: type) type {
                 .Nano => Magic.NanoSeconds,
             };
             const hdr = FileHeader{
-                .magic = @enumToInt(magic),
+                .magic = @intFromEnum(magic),
                 .snap_len = self.options.snap_len,
-                .network = @enumToInt(self.options.network),
+                .network = @intFromEnum(self.options.network),
             };
             const e = self.options.endian;
             try self.writer.writeInt(u32, hdr.magic, e);
@@ -182,23 +182,23 @@ pub fn PcapWriter(comptime WriterType: type) type {
         pub fn writeRecord(self: *Self, hdr: RecordHeader, data: []const u8) !void {
             // Length sanity checks
             // We don't check against FileHeader's snaplen, as reader tools usually ignore this.
-            const incl_len = if (hdr.incl_len == 0) @truncate(u32, data.len) else hdr.incl_len;
+            const incl_len: u32 = if (hdr.incl_len == 0) @truncate(data.len) else hdr.incl_len;
             if (incl_len != data.len)
                 return error.PacketLenMismatch;
 
-            const orig_len = if (hdr.orig_len == 0) @truncate(u32, data.len) else hdr.orig_len;
+            const orig_len: u32 = if (hdr.orig_len == 0) @truncate(data.len) else hdr.orig_len;
             if (incl_len > orig_len)
                 return error.PacketInvalidOrigLen;
 
             const ts = if (hdr.ts_sec == 0) blk: {
                 const ts_nano = time.nanoTimestamp();
-                const secs = @truncate(u32, @bitCast(u128, @divFloor(ts_nano, time.ns_per_s)));
-                const usecs = switch (self.options.precision) {
+                const secs: u32 = @truncate(@as(u128, @bitCast(@divFloor(ts_nano, time.ns_per_s))));
+                const usecs: u32 = switch (self.options.precision) {
                     .Micro => u: {
                         const ts_micro = @divFloor(ts_nano, time.ns_per_us);
-                        break :u @truncate(u32, @rem(@bitCast(u128, ts_micro), time.us_per_s));
+                        break :u @truncate(@rem(@as(u128, @bitCast(ts_micro)), time.us_per_s));
                     },
-                    .Nano => @truncate(u32, @rem(@bitCast(u128, ts_nano), time.ns_per_s)),
+                    .Nano => @truncate(@rem(@as(u128, @bitCast(ts_nano)), time.ns_per_s)),
                 };
                 break :blk .{ secs, usecs };
             } else
