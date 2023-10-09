@@ -4,6 +4,11 @@ pub fn build(b: *std.build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    _ = b.addModule("zig-pcapfile", .{
+        .source_file = .{ .path = "pcapfile.zig" },
+        .dependencies = &[_]std.Build.ModuleDependency{},
+    });
+
     const lib = b.addStaticLibrary(.{
         .name = "zig-pcapfile",
         .root_source_file = .{ .path = "pcapfile.zig" },
