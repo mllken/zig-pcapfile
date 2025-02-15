@@ -71,10 +71,10 @@ pub fn Iterator(comptime ReaderType: type) type {
         /// Read a FileHeader from reader and return an packet record iterator.
         pub fn init(allocator: mem.Allocator, options: IteratorOptions, reader: anytype) !Self {
             const hdr_bytes = try reader.readBytesNoEof(file_header_len);
-            const magic = mem.readIntLittle(u32, hdr_bytes[0..4]);
+            const magic = mem.readInt(u32, hdr_bytes[0..4], .little);
             const endian: std.builtin.Endian = switch (@as(Magic, @enumFromInt(magic))) {
-                .MicroSeconds, .NanoSeconds => .Little,
-                .MicroSecondsBE, .NanoSecondsBE => .Big,
+                .MicroSeconds, .NanoSeconds => .little,
+                .MicroSecondsBE, .NanoSecondsBE => .big,
                 _ => return error.BadMagic,
             };
             const hdr = FileHeader{
@@ -140,7 +140,7 @@ pub const WriterOptions = struct {
     snap_len: u32 = default_max_snap_len,
     network: LinkType = .ETHERNET,
     precision: Precision = .Micro,
-    endian: std.builtin.Endian = .Little,
+    endian: std.builtin.Endian = .little,
 };
 
 pub fn PcapWriter(comptime WriterType: type) type {
